@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!--	Ciarán Sweeney	c12317616	Assignment 2 -->
+	<!-- This Code will not work on google chorme, use firefox to test this -->
+	
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	
+	<meta charset="UTF-8">
+	<script>
+		var message="";
+		var logged_in=false;
+		//Datepicker
+		 $( function() {
+			$( "#dob_text" ).datepicker();
+		 } );
+		 //Crate cookie if the data entered is right
+		function setCookie() {
+			var fail=false;
+			message="";
+			var name=document.getElementById("name_text").value;
+			//checks if username is already taken
+			if(getCookie(name) !="" && logged_in==false){
+				message=message+"This username is already taken,pick a different username please \n"
+				fail=true;
+			}
+			//checks if username is valid
+			if(!(userValidation(name))){
+				fail=true;
+			}
+			var password=document.getElementById("password_text").value;
+			//checks if the password is valid
+			if(!(passwordValidation(password))){
+				fail=true;
+			}
+			var email=document.getElementById("email_text").value;
+			//checks if the email is valid
+			if(!(emailValidation())){
+				fail=true;
+			}
+			var dob=document.getElementById("dob_text").value;
+			//checks if the date of birth is valid
+			if(!(dateValidation(dob))){
+				fail=true;
+			}
+			//If an error is found, a message will say whats wrong
+			if(fail){
+				alert(message);
+				return false;
+			}
+			var count=0;
+			var d = new Date();
+			
+			d.setFullYear(d.getFullYear() + 1);
+			var expires = "expires="+d.toUTCString();
+			var cookie=JSON.stringify({"username":name, "password":password,"email":email,"dob":dob,"count":count}); 
+			//encode
+			var encode_uri=encodeURI(name+ "=" + cookie +";" + expires + ";path=/");
+			document.cookie=encode_uri;
+			if(logged_in==false){
+				alert("Cool you have just registered to my site!");
+			}
+			else{
+				alert("Your update has been made");
+			}
+			
+		}
+		//Gets the cookie
+		function getCookie(cname) {
+			var name=cname;
+			name=name+"=";
+			var ca = document.cookie.split(';');
+			for(var i = 0; i < ca.length; i++) {
+				var c = ca[i];
+				while (c.charAt(0) == ' ') {
+					c = c.substring(1);
+				}
+				if (c.indexOf(name) == 0) {
+					return c.substring(name.length, c.length);
+				}
+			}
+			return "";
+		}
+		//checks the cookie
+		function checkCookie() {
+			var name = document.getElementById("name_text").value;
+			var user = getCookie(name);
+			if (user != "") {
+				//decode
+				var decode_uri=decodeURI(user);
+				var user_object=JSON.parse(decode_uri);
+				var password=document.getElementById("password_text").value;
+				//checks password matches
+				if(user_object.password==password){
+					alert("Welcome again " + user_object.username);
+					//Remove login in button
+					document.getElementById("log_in").disabled = true;
+					//buttons.removeChild(log_in);
+					//increase count
+					updateCookie(user_object.username,user_object.password,user_object.email,user_object.dob,user_object.count+1);
+					user_object.count=user_object.count+1;
+					document.getElementById("countText").innerHTML="Your View Count="+user_object.count; 
+					//fill the fields with user info
+					document.getElementById("name_text").value=user_object.username;
+					document.getElementById("password_text").value=user_object.password
+					document.getElementById("email_text").value=user_object.email;
+					document.getElementById("dob_text").value=user_object.dob;
+					//change to update
+					document.getElementById("register").value="update";
+					logged_in=true;
+					//forget me button
+					document.getElementById("forget_me").style.visibility="visible";
+					//Disable Text field
+					document.getElementById("name_text").disabled = true;
+				}
+				else{
+					alert("Your password is wrong");
+				}
+			} 
+			else {
+				alert("This user does not exits");
+			}
+		}
+		//Email Validation
+		function emailValidation(){
+			if(document.getElementById("email_text").value.match(/^[\w\-\.\+]+\@[a-zA-Z0-9\.\-]+\.[a-zA-z0-9]{2,4}$/)){
+				return true;
+			} 
+			else{
+				message=message+"Enter the Email in the right format \n"	
+				return false;
+			}
+		}
+		//Date Validation
+		function dateValidation(dob){
+			dob=new Date(dob);
+			var now   = new Date();
+			if(now<dob){
+				message=message+"Enter in a valid date of birth \n"
+				return false;
+			}
+			else if(now>dob){	
+				return true;
+			}
+			else{
+				message=message+"Enter in a valid formate for date of birth \n"
+				return false;
+			}
+		}
+		//Password Validation
+		function passwordValidation(psw){
+			var psw_fail=false;
+			//rule 1 password must be great
+			if(psw.length<6){
+				message=message+"Your password is too short,enter more than 5 characters \n"
+				psw_fail=true;
+			}
+			//rule 2 your password must contain a number
+			if(!/\d/.test(psw)){
+				message=message+"Your password must contain a number \n"
+				psw_fail=true;
+			}
+			//rule 3 your password must contain a Upper case letter
+			if(!/[A-Z]/.test(psw)){
+				message=message+"Your password must contain a Upper case letter \n"
+				psw_fail=true;
+			}
+			//rule 4 your password must contain a lower case letter
+			if(!/[a-z]/.test(psw)){
+				message=message+"Your password must contain a Lower case letter \n"
+				psw_fail=true;
+			}
+			if(psw_fail){
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		//User Validation
+		function userValidation(user){
+			if(user==""){
+				message=message+"Your name is too short,enter more than 0 characters \n"
+				return false;
+			}
+			else if(!/[a-z]+$/.test(user)){
+				message=message+"Your name must contain just Lower case letter \n"
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		//Updates the cookie
+		function updateCookie(user,pswd,email,dob,count){
+			var d = new Date();
+			d.setFullYear(d.getFullYear() + 1);
+			var expires = "expires="+d.toUTCString();
+			var cookie=JSON.stringify({"username":user, "password":pswd,"email":email,"dob":dob,"count":count});
+			document.cookie = user+ "=" + cookie +";" + expires + ";path=/";
+		}
+		//Delete cookie
+		function deleteCookie(){
+			var user=document.getElementById("name_text").value;
+			var d = new Date();
+			d.setFullYear(d.getFullYear() - 1);
+			var expires = "expires="+d.toUTCString();
+			var cookie=JSON.stringify({"username":user, "password":"","email":"","dob":"","count":""});
+			document.cookie = user+ "=" + cookie +";" + expires + ";path=/";
+			location.reload();
+			//enable buttons again
+			document.getElementById("name_text").disabled = false;
+			document.getElementById("log_in").disabled = false;
+		}
+	</script>
+</head>
+<body>
+<h1>Assignment 2 Page</h1>
+<form name="personal_info" id="personal_info">
+<table border="0">
+<tbody>
+	<tr>
+		<td class="name">
+			Name:
+		</td>
+		<td class="data">
+			<input type="text" name="name_text" id="name_text" width="20" maxlength="40" size="20">
+		</td>
+	</tr>
+	<tr>
+		<td class="password">
+			Password:
+		</td>
+		<td class="data">
+			<input type="password" name="password_text" id="password_text" width="20" maxlength="40" size="20">
+		</td>
+	</tr>
+	<tr>
+		<td class="email">
+			E-mail address:
+		</td>
+		<td class="data">
+			<input type="text" name="email_text" id="email_text" width="20" maxlength="40" size="20">
+		</td>
+	</tr>
+	<tr>
+		<td class="dob">
+			Date Of Birth:
+		</td>
+		<td class="data">
+			<input type="text" name="dob_text" id="dob_text" width="20" maxlength="40" size="20">
+		</td>
+	</tr>
+	<tr>
+	<td class="buttons" id="buttons">
+		<input type="button" id="log_in" value="Log In" 	onclick="checkCookie()">
+		<input type="button" id="register" value="Register" 	onclick="setCookie()">
+		<input type="button" id="forget_me" value="Forget me" 	onclick="deleteCookie()" style="visibility:hidden;">
+	</td>
+	</tr>
+</tbody>
+</form>
+<p id="countText"></p>
+</body>
+<script>
+	document.getElementById("name_text").disabled = false;
+	document.getElementById("log_in").disabled = false;
+</script>
+</html>
